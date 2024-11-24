@@ -1,8 +1,11 @@
 Hotel Reservation System
+
 Overview
+
 This Java-based application simulates a hotel reservation system. It allows customers to register, log in, view and manage their profiles, search available rooms, make reservations, and view their reservation history. Administrators can manage rooms (add, remove, update), view all reservations, and manage reservations.
 
 Features
+
 Customer:
 Register and log in.
 View and edit profile.
