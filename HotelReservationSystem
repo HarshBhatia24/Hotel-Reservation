@@ -1,0 +1,460 @@
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Scanner;
+
+// Abstract User Class
+abstract class User {
+    protected String userID;
+    protected String username;
+    protected String password;
+
+    public User(String userID, String username, String password) {
+        this.userID = userID;
+        this.username = username;
+        this.password = password;
+    }
+
+    public abstract boolean login(String username, String password);
+    public abstract void viewProfile();
+}
+
+// Customer Class
+class Customer extends User {
+    private ArrayList<Reservation> reservationHistory;
+
+    public Customer(String userID, String username, String password) {
+        super(userID, username, password);
+        this.reservationHistory = new ArrayList<>();
+    }
+
+    @Override
+    public boolean login(String username, String password) {
+        return this.username.equals(username) && this.password.equals(password);
+    }
+
+    @Override
+    public void viewProfile() {
+        System.out.println("User  ID: " + userID);
+        System.out.println("Username: " + username);
+    }
+
+    public void makeReservation(Reservation reservation) {
+        reservationHistory.add(reservation);
+    }
+
+    public void viewReservationHistory() {
+        for (Reservation res : reservationHistory) {
+            System.out.println(res);
+        }
+    }
+}
+
+// Administrator Class
+class Administrator extends User {
+    public Administrator(String userID, String username, String password) {
+        super(userID, username, password);
+    }
+
+    @Override
+    public boolean login(String username, String password) {
+        return this.username.equals(username) && this.password.equals(password);
+    }
+
+    @Override
+    public void viewProfile() {
+        System.out.println("User  ID: " + userID);
+        System.out.println("Username: " + username);
+    }
+}
+
+// Room Class
+class Room {
+    private int roomNumber;
+    private String roomType;
+    private boolean isAvailable;
+    private double pricePerNight;
+
+    public Room(int roomNumber, String roomType, double pricePerNight) {
+        this.roomNumber = roomNumber;
+        this.roomType = roomType;
+        this.isAvailable = true;
+        this.pricePerNight = pricePerNight;
+    }
+
+    public boolean isAvailable() {
+        return isAvailable;
+    }
+
+    public void bookRoom() {
+        isAvailable = false;
+    }
+
+    public void releaseRoom() {
+        isAvailable = true;
+    }
+
+    public double getPricePerNight() {
+        return pricePerNight;
+    }
+
+    public int getRoomNumber() {
+        return roomNumber;
+    }
+
+    public String getRoomType() {
+        return roomType;
+    }
+
+    @Override
+    public String toString() {
+        return "Room Number: " + roomNumber + ", Type: " + roomType + ", Price: $" + pricePerNight + ", Available: " + isAvailable;
+    }
+}
+
+// Reservation Class
+class Reservation {
+    private String reservationID;
+    private Customer customer;
+    private Room room;
+    private Date checkInDate;
+    private Date checkOutDate;
+    private double totalAmount;
+    private String status;
+
+    public Reservation(String reservationID, Customer customer, Room room, Date checkInDate, Date checkOutDate) {
+        this.reservationID = reservationID;
+        this.customer = customer;
+        this.room = room;
+        this.checkInDate = checkInDate;
+        this.checkOutDate = checkOutDate;
+        this.totalAmount = calculateTotal();
+        this.status = "Booked";
+    }
+
+    private double calculateTotal() {
+        long duration = checkOutDate.getTime() - checkInDate.getTime();
+        long days = duration / (1000 * 60 * 60 * 24);
+        return days * room.getPricePerNight();
+    }
+
+    @Override
+    public String toString() {
+        return "Reservation ID: " + reservationID + ", Room: " + room.getRoomNumber() + ", Dates: " + checkInDate + " to " + checkOutDate + ", Status: " + status;
+    }
+}
+
+// Main Application Class
+public class HotelReservationSystem {
+    private static ArrayList<User> users = new ArrayList<>();
+    private static ArrayList<Room> rooms = new ArrayList<>();
+    private static Scanner scanner = new Scanner(System.in);
+
+    public static void main(String[] args) {
+        // Sample Rooms
+        rooms.add(new Room(101, "Single", 100));        
+        rooms.add(new Room(102, "Double", 150));
+        rooms.add(new Room(103, "Suite", 250));
+
+        // Sample Administrator
+        users.add(new Administrator("ADM1001", "admin", "admin123"));
+
+        // Main menu
+        while (true) {
+            System.out.println("Welcome to the Hotel Reservation System!");
+            System.out.println("1. Register as a Customer");
+            System.out.println("2. Login");
+            System.out.println("3. Exit");
+            System.out.print("Please enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    registerCustomer();
+                    break;
+                case 2:
+                    login();
+                    break;
+                case 3:
+                    System.out.println("Exiting the system. Thank you!");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void registerCustomer() {
+        System.out.print("Enter Username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter Password: ");
+        String password = scanner.nextLine();
+
+        // Check for unique username
+        for (User  user : users) {
+            if (user.username.equals(username)) {
+                System.out.println("Username already exists. Please choose a different username.");
+                return;
+            }
+        }
+
+        // Generate unique userID
+        String userID = "CUS" + (users.size() + 1001);
+        users.add(new Customer(userID, username, password));
+        System.out.println("Registration successful! Your User ID is: " + userID);
+    }
+
+    private static void login() {
+        System.out.print("Enter Username: ");
+        String username = scanner.nextLine();
+        System.out.print("Enter Password: ");
+        String password = scanner.nextLine();
+
+        User loggedInUser  = null;
+        for (User  user : users) {
+            if (user.login(username, password)) {
+                loggedInUser  = user;
+                break;
+            }
+        }
+
+        if (loggedInUser  instanceof Customer) {
+            customerMenu((Customer) loggedInUser );
+        } else if (loggedInUser  instanceof Administrator) {
+            adminMenu((Administrator) loggedInUser );
+        } else {
+            System.out.println("Invalid login credentials.");
+        }
+    }
+
+    private static void customerMenu(Customer customer) {
+        while (true) {
+            System.out.println("Welcome, " + customer.username + "!");
+            System.out.println("1. View Profile");
+            System.out.println("2. Edit Profile");
+            System.out.println("3. Search Available Rooms");
+            System.out.println("4. Make a Reservation");
+            System.out.println("5. View Reservation History");
+            System.out.println("6. Logout");
+            System.out.print("Please enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    customer.viewProfile();
+                    break;
+                case 2:
+                    editProfile(customer);
+                    break;
+                case 3:
+                    searchAvailableRooms();
+                    break;
+                case 4:
+                    makeReservation(customer);
+                    break;
+                case 5:
+                    customer.viewReservationHistory();
+                    break;
+                case 6:
+                    System.out.println("Logging out...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void editProfile(Customer customer) {
+        System.out.print("Enter new Username (leave empty to keep current): ");
+        String newUsername = scanner.nextLine();
+        if (!newUsername.isEmpty()) {
+            customer.username = newUsername; // Simple update, consider adding validation
+        }
+        System.out.print("Enter new Password (leave empty to keep current): ");
+        String newPassword = scanner.nextLine();
+        if (!newPassword.isEmpty()) {
+            customer.password = newPassword; // Simple update, consider adding validation
+        }
+        System.out.println("Profile updated successfully.");
+    }
+
+    private static void searchAvailableRooms() {
+        System.out.print("Enter Room Type (Single/Double/Suite): ");
+        String roomType = scanner.nextLine();
+        System.out.print("Enter Check-in Date (YYYY-MM-DD): ");
+        String checkInDateStr = scanner.nextLine(); // You can parse this to Date
+        System.out.print("Enter Check-out Date (YYYY-MM-DD): ");
+        String checkOutDateStr = scanner.nextLine(); // You can parse this to Date
+
+        // For simplicity, we will not implement date parsing and validation here
+        System.out.println("Available Rooms:");
+        for (Room room : rooms ) {
+            if (room.isAvailable() && room.getRoomType().equalsIgnoreCase(roomType)) {
+                System.out.println(room);
+            }
+        }
+    }
+
+    private static void makeReservation(Customer customer) {
+        System.out.print("Enter Room Number you wish to reserve: ");
+        int roomNumber = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Room selectedRoom = null;
+        for (Room room : rooms) {
+            if (room.getRoomNumber() == roomNumber && room.isAvailable()) {
+                selectedRoom = room;
+                break;
+            }
+        }
+
+        if (selectedRoom == null) {
+            System.out.println("Room not available or does not exist.");
+            return;
+        }
+
+        System.out.print("Enter Check-in Date (YYYY-MM-DD): ");
+        String checkInDateStr = scanner.nextLine(); // You can parse this to Date
+        System.out.print("Enter Check-out Date (YYYY-MM-DD): ");
+        String checkOutDateStr = scanner.nextLine(); // You can parse this to Date
+
+        // For simplicity, we will not implement date parsing and validation here
+        String reservationID = "RES" + (customer.reservationHistory.size() + 3001);
+        Reservation reservation = new Reservation(reservationID, customer, selectedRoom, new Date(), new Date()); // Replace with actual dates
+        customer.makeReservation(reservation);
+        selectedRoom.bookRoom();
+        System.out.println("Reservation successful! Your Reservation ID is: " + reservationID);
+    }
+
+    private static void adminMenu(Administrator admin) {
+        while (true) {
+            System.out.println("Welcome Administrator, " + admin.username + "!");
+            System.out.println("1. View Profile");
+            System.out.println("2. Edit Profile");
+                        System.out.println("3. Add Room");
+            System.out.println("4. Remove Room");
+            System.out.println("5. Update Room");
+            System.out.println("6. View All Reservations");
+            System.out.println("7. Manage Reservations");
+            System.out.println("8. Logout");
+            System.out.print("Please enter your choice: ");
+            int choice = scanner.nextInt();
+            scanner.nextLine(); // Consume newline
+
+            switch (choice) {
+                case 1:
+                    admin.viewProfile();
+                    break;
+                case 2:
+                    editProfile(admin);
+                    break;
+                case 3:
+                    addRoom();
+                    break;
+                case 4:
+                    removeRoom();
+                    break;
+                case 5:
+                    updateRoom();
+                    break;
+                case 6:
+                    viewAllReservations();
+                    break;
+                case 7:
+                    manageReservations();
+                    break;
+                case 8:
+                    System.out.println("Logging out...");
+                    return;
+                default:
+                    System.out.println("Invalid choice. Please try again.");
+            }
+        }
+    }
+
+    private static void addRoom() {
+        System.out.print("Enter Room Number: ");
+        int roomNumber = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+        System.out.print("Enter Room Type (Single/Double/Suite): ");
+        String roomType = scanner.nextLine();
+        System.out.print("Enter Price per Night: ");
+        double pricePerNight = scanner.nextDouble();
+
+        Room newRoom = new Room(roomNumber, roomType, pricePerNight);
+        rooms.add(newRoom);
+        System.out.println("Room added successfully.");
+    }
+
+    private static void removeRoom() {
+        System.out.print("Enter Room Number to remove: ");
+        int roomNumber = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Room roomToRemove = null;
+        for (Room room : rooms) {
+            if (room.getRoomNumber() == roomNumber) {
+                roomToRemove = room;
+                break;
+            }
+        }
+
+        if (roomToRemove != null) {
+            rooms.remove(roomToRemove);
+            System.out.println("Room removed successfully.");
+        } else {
+            System.out.println("Room not found.");
+        }
+    }
+
+    private static void updateRoom() {
+        System.out.print("Enter Room Number to update: ");
+        int roomNumber = scanner.nextInt();
+        scanner.nextLine(); // Consume newline
+
+        Room roomToUpdate = null;
+        for (Room room : rooms) {
+            if (room.getRoomNumber() == roomNumber) {
+                roomToUpdate = room;
+                break;
+            }
+        }
+
+        if (roomToUpdate != null) {
+            System.out.print("Enter new Room Type (leave empty to keep current): ");
+            String newRoomType = scanner.nextLine();
+            if (!newRoomType.isEmpty()) {
+                roomToUpdate.roomType = newRoomType; // Update room type
+            }
+
+            System.out.print("Enter new Price per Night (leave empty to keep current): ");
+            String newPrice = scanner.nextLine();
+            if (!newPrice.isEmpty()) {
+                roomToUpdate.pricePerNight = Double.parseDouble(newPrice); // Update price
+            }
+
+            System.out.println("Room updated successfully.");
+        } else {
+            System.out.println("Room not found.");
+        }
+    }
+
+    private static void viewAllReservations() {
+        System.out.println("All Reservations:");
+        for (User  user : users) {
+            if (user instanceof Customer) {
+                ((Customer) user).viewReservationHistory();
+            }
+        }
+    }
+
+    private static void manageReservations() {
+        System.out.print("Enter Reservation ID to manage: ");
+        String reservationID = scanner.nextLine();
+        // Logic to find and manage reservation (e.g., cancel, update status)
+        // For simplicity, we can print a message
+        System.out.println("Managing reservation: " + reservationID);
+        // Implement further logic as needed
+    }
+}    
