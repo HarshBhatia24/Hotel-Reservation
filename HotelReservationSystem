@@ -20,7 +20,7 @@ abstract class User {
 
 // Customer Class
 class Customer extends User {
-    private ArrayList<Reservation> reservationHistory;
+    ArrayList<Reservation> reservationHistory;
 
     public Customer(String userID, String username, String password) {
         super(userID, username, password);
