@@ -125,13 +125,13 @@ class Room {
 
 // Reservation Class
 class Reservation {
-    private String reservationID;
-    private Customer customer;
-    private Room room;
-    private Date checkInDate;
-    private Date checkOutDate;
-    private double totalAmount;
-    private String status;
+    private final String reservationID;
+    private final Customer customer;
+    private final Room room;
+    private final Date checkInDate;
+    private final Date checkOutDate;
+    private final double totalAmount;
+    private final String status;
 
     public Reservation(String reservationID, Customer customer, Room room, Date checkInDate, Date checkOutDate) {
         if (checkOutDate.before(checkInDate)) {
@@ -438,7 +438,7 @@ public class HotelReservationSystem {
         System.out.print("Enter Room Number: ");
         int roomNumber = scanner.nextInt();
         scanner.nextLine(); // Consume newline
-        System.out.print("Enter Room Type (Single/Double/Suite): ");
+        System.out.print("Enter Room Type (single/double/suite): ");
         String roomType = scanner.nextLine().trim();
         System.out.print("Enter Price per Night: ");
         double pricePerNight = scanner.nextDouble();
